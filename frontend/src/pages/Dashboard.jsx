@@ -9,8 +9,8 @@ const Dashboard = () => {
     description: "",
   });
 
-  const token = localStorage.getItem("token");
   const API_URL = import.meta.env.VITE_API_URL;
+  const token = localStorage.getItem("token");
 
   // ================= FETCH TASKS =================
   const fetchTasks = async () => {
@@ -22,7 +22,7 @@ const Dashboard = () => {
       });
       setTasks(res.data);
     } catch (error) {
-      console.log("Fetch Tasks Error:", error.message);
+      console.log("Fetch Error:", error.message);
     }
   };
 
@@ -30,7 +30,7 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
-  // ================= HANDLE INPUT =================
+  // ================= INPUT CHANGE =================
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -43,11 +43,12 @@ const Dashboard = () => {
     e.preventDefault();
 
     if (!formData.title || !formData.description) {
-      return alert("Fill all fields");
+      alert("Fill all fields");
+      return;
     }
 
     try {
-      await axios.post(
+      const res = await axios.post(
         `${API_URL}/api/tasks`,
         formData,
         {
@@ -57,14 +58,13 @@ const Dashboard = () => {
         }
       );
 
-      setFormData({
-        title: "",
-        description: "",
-      });
+      console.log("Task Added:", res.data);
 
+      setFormData({ title: "", description: "" });
       fetchTasks();
     } catch (error) {
       console.log("Add Task Error:", error.message);
+      alert("Task not added");
     }
   };
 
@@ -83,7 +83,7 @@ const Dashboard = () => {
     }
   };
 
-  // ================= UPDATE STATUS =================
+  // ================= UPDATE TASK =================
   const updateStatus = async (id) => {
     try {
       await axios.put(
@@ -115,6 +115,7 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
 
+      {/* TOP BAR */}
       <div className="top-bar">
         <div>
           <h1>TaskFlow Dashboard</h1>
@@ -168,36 +169,34 @@ const Dashboard = () => {
 
       {/* TASK LIST */}
       <div className="task-list">
-        {tasks.map((task) => (
-          <div className="task-card" key={task._id}>
+        {tasks.length === 0 ? (
+          <p>No tasks found</p>
+        ) : (
+          tasks.map((task) => (
+            <div className="task-card" key={task._id}>
 
-            <div className="task-header">
-              <h2>{task.title}</h2>
-              <span
-                className={
-                  task.status === "Completed"
-                    ? "status completed"
-                    : "status pending"
-                }
-              >
-                {task.status}
-              </span>
+              <div className="task-header">
+                <h2>{task.title}</h2>
+                <span className={task.status === "Completed" ? "completed" : "pending"}>
+                  {task.status}
+                </span>
+              </div>
+
+              <p>{task.description}</p>
+
+              <div className="task-actions">
+                <button onClick={() => updateStatus(task._id)}>
+                  Update
+                </button>
+
+                <button onClick={() => deleteTask(task._id)}>
+                  Delete
+                </button>
+              </div>
+
             </div>
-
-            <p>{task.description}</p>
-
-            <div className="task-actions">
-              <button onClick={() => updateStatus(task._id)}>
-                Update
-              </button>
-
-              <button onClick={() => deleteTask(task._id)}>
-                Delete
-              </button>
-            </div>
-
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
     </div>
