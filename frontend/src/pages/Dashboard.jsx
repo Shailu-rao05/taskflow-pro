@@ -10,17 +10,19 @@ const Dashboard = () => {
   });
 
   const token = localStorage.getItem("token");
+  const API_URL = import.meta.env.VITE_API_URL;
 
+  // ================= FETCH TASKS =================
   const fetchTasks = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/tasks", {
+      const res = await axios.get(`${API_URL}/api/tasks`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       setTasks(res.data);
     } catch (error) {
-      console.log(error);
+      console.log("Fetch Tasks Error:", error.message);
     }
   };
 
@@ -28,6 +30,7 @@ const Dashboard = () => {
     fetchTasks();
   }, []);
 
+  // ================= HANDLE INPUT =================
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -35,6 +38,7 @@ const Dashboard = () => {
     });
   };
 
+  // ================= ADD TASK =================
   const addTask = async (e) => {
     e.preventDefault();
 
@@ -42,48 +46,63 @@ const Dashboard = () => {
       return alert("Fill all fields");
     }
 
-    await axios.post(
-      "http://localhost:5000/api/tasks",
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    try {
+      await axios.post(
+        `${API_URL}/api/tasks`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    setFormData({
-      title: "",
-      description: "",
-    });
+      setFormData({
+        title: "",
+        description: "",
+      });
 
-    fetchTasks();
+      fetchTasks();
+    } catch (error) {
+      console.log("Add Task Error:", error.message);
+    }
   };
 
+  // ================= DELETE TASK =================
   const deleteTask = async (id) => {
-    await axios.delete(`http://localhost:5000/api/tasks/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    fetchTasks();
-  };
-
-  const updateStatus = async (id) => {
-    await axios.put(
-      `http://localhost:5000/api/tasks/${id}`,
-      {},
-      {
+    try {
+      await axios.delete(`${API_URL}/api/tasks/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      }
-    );
+      });
 
-    fetchTasks();
+      fetchTasks();
+    } catch (error) {
+      console.log("Delete Error:", error.message);
+    }
   };
 
+  // ================= UPDATE STATUS =================
+  const updateStatus = async (id) => {
+    try {
+      await axios.put(
+        `${API_URL}/api/tasks/${id}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      fetchTasks();
+    } catch (error) {
+      console.log("Update Error:", error.message);
+    }
+  };
+
+  // ================= LOGOUT =================
   const logout = () => {
     localStorage.removeItem("token");
     window.location.href = "/";
@@ -95,6 +114,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard">
+
       <div className="top-bar">
         <div>
           <h1>TaskFlow Dashboard</h1>
@@ -106,6 +126,7 @@ const Dashboard = () => {
         </button>
       </div>
 
+      {/* STATS */}
       <div className="stats">
         <div className="stat-card">
           <h2>{tasks.length}</h2>
@@ -123,7 +144,9 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* ADD TASK FORM */}
       <form onSubmit={addTask} className="task-form">
+
         <input
           type="text"
           name="title"
@@ -143,9 +166,11 @@ const Dashboard = () => {
         <button type="submit">Add Task</button>
       </form>
 
+      {/* TASK LIST */}
       <div className="task-list">
         {tasks.map((task) => (
           <div className="task-card" key={task._id}>
+
             <div className="task-header">
               <h2>{task.title}</h2>
               <span
@@ -170,9 +195,11 @@ const Dashboard = () => {
                 Delete
               </button>
             </div>
+
           </div>
         ))}
       </div>
+
     </div>
   );
 };
